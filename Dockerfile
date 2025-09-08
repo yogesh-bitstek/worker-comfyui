@@ -96,13 +96,13 @@ FROM base AS downloader
 
 ARG HUGGINGFACE_ACCESS_TOKEN
 # Set default model type if none is provided
-ARG MODEL_TYPE=flux1-dev-fp8
+ARG MODEL_TYPE=hidream
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
 
 # Create necessary directories upfront
-RUN mkdir -p models/checkpoints models/vae models/unet models/clip
+RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/diffusion_models models/text_encoders
 
 # Download checkpoints/vae/unet/clip models to include in image based on model type
 RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
@@ -112,8 +112,26 @@ RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
     fi
 
 RUN if [ "$MODEL_TYPE" = "sd3" ]; then \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors; \
+      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" \
+        -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors \
+        https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors; \
     fi
+
+RUN if [ "$MODEL_TYPE" = "hidream" ]; then \
+      # Download diffusion model
+      wget -q -O models/diffusion_models/hidream_i1_full_fp16.safetensors \
+        https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/diffusion_models/hidream_i1_full_fp16.safetensors && \
+      # Download text encoders
+      wget -q -O models/text_encoders/clip_l_hidream.safetensors \
+        https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_l_hidream.safetensors && \
+      wget -q -O models/text_encoders/clip_g_hidream.safetensors \
+        https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_g_hidream.safetensors && \
+      wget -q -O models/text_encoders/t5xxl_fp8_e4m3fn_scaled.safetensors \
+        https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/t5xxl_fp8_e4m3fn_scaled.safetensors && \
+      wget -q -O models/text_encoders/llama_3.1_8b_instruct_fp8_scaled.safetensors \
+        https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/llama_3.1_8b_instruct_fp8_scaled.safetensors; \
+    fi
+
 
 RUN if [ "$MODEL_TYPE" = "flux1-schnell" ]; then \
       wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors && \
