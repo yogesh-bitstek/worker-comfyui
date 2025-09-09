@@ -1,3 +1,4 @@
+print(">>> Handler.py loaded successfully <<<")
 import runpod
 from runpod.serverless.utils import rp_upload
 import json
